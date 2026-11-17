@@ -1,0 +1,9 @@
+telemetry.json
+*.json
+outputs/
+__pycache__/
+spark-warehouse/
+metastore_db/
+derby.log
+*.crc
+.ipynb_checkpoints/
