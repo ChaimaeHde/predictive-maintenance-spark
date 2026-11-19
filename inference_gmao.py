@@ -59,6 +59,14 @@ def read_threshold(value):
     return 0.5
 
 
+def load_model(spark, path):
+    """Charge le PipelineModel via la JVM.
+    PipelineModel.load() construit ses chemins avec os.path.join : sous Windows il
+    ecrit 'model\\metadata' (antislash), introuvable sur HDFS. La JVM, elle,
+    utilise toujours des '/'."""
+    return PipelineModel._from_java(spark._jvm.org.apache.spark.ml.PipelineModel.load(path))
+
+
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
@@ -77,7 +85,7 @@ def main():
     spark.sparkContext.setLogLevel("WARN")
 
     # ---------- 1. Modele ----------
-    model = PipelineModel.load(f"{args.base}{args.model}")
+    model = load_model(spark, f"{args.base}{args.model}")
     log(f"modele charge : {args.base}{args.model} ({len(model.stages)} etapes) | seuil = {thr}")
 
     # ---------- 2. Donnees : historique + nouvelles mesures ----------
