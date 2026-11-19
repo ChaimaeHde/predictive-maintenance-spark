@@ -48,7 +48,8 @@ Les données ne sont pas versionnées : `generate_telemetry.py` les régénère 
 | `train_predictive_maintenance.py` | Split temporel, pondération des classes, CrossValidator (PR-AUC), évaluation, sauvegarde du PipelineModel | ✅ |
 | `inference_gmao.py` | Rechargement du PipelineModel et prédictions pour la GMAO (CSV sur HDFS) | ✅ |
 | `threshold.txt` | Seuil d'alerte retenu à l'entraînement, lu par `inference_gmao.py` | ✅ |
-| `model_evaluation_report.pdf` | Rapport : matrices de confusion, précision, rappel, courbes ROC/PR | ✅ |
+| `build_final_model.py` | Reconstruit le modèle final en quelques minutes avec les meilleurs hyperparamètres (sans refaire la validation croisée) | ✅ |
+| `dashboard_gmao.py` | Tableau de bord Streamlit : lance la détection pour une journée et affiche ordres de travail, carte de chaleur, courbes | ✅ |
 
 ## Résultats (test : septembre 2026)
 
@@ -100,10 +101,20 @@ python train_predictive_maintenance.py --quick   # test rapide (grille réduite)
 python train_predictive_maintenance.py           # grille complète
 hdfs dfs -ls /maintenance/models
 
+# 4 bis. (optionnel) Recréer directement le modèle final, sans les 3 h de validation croisée
+python build_final_model.py
+
 # 5. Prédictions pour la GMAO (24 dernières heures par défaut)
 python inference_gmao.py
-hdfs dfs -ls -R /maintenance/predictions
+python inference_gmao.py --start 2026-09-08T00:00:00Z --end 2026-09-09T00:00:00Z
+hdfs dfs -cat "/maintenance/predictions/batch=2026-09-08T23/alertes_machines/*.csv"
+
+# 6. Tableau de bord
+pip install streamlit
+streamlit run dashboard_gmao.py
 ```
+
+Sous Windows, mettre entre guillemets tout chemin HDFS contenant `=` (sinon `hdfs.cmd` coupe l'argument).
 
 Les figures et tableaux de résultats sont écrits dans `outputs/` (non versionné).
 
